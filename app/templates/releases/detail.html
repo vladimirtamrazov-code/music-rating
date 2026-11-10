@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% from "_macros.html" import cover, score_badge, review_card, release_card with context %}
+{% block title %}{{ release.artist.name }} — {{ release.title }} — {{ site_name }}{% endblock %}
+{% block description %}{{ release.type_label }} {{ release.artist.name }} «{{ release.title }}»: оценка слушателей {{ release.user_score|score }}, критиков {{ release.critic_score|score }}.{% endblock %}
+{% block content %}
+{% if release.status != 'published' %}
+  <div class="flash flash-info">Статус: {{ release.status_label }}. Релиз виден только вам{% if current_user.is_admin %} и администраторам{% endif %}.
+    {% if current_user.is_admin %}
+      <form class="inline" action="{{ url_for('admin.release_status', release_id=release.id) }}" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-sm" name="status" value="published">Опубликовать</button>
+        <button class="btn btn-sm btn-ghost" name="status" value="rejected">Отклонить</button>
+      </form>
+    {% endif %}
+  </div>
+{% endif %}
+
+<section class="release-hero">
+  {{ cover(release, 'cover-lg') }}
+  <div class="release-info">
+    <div class="muted">{{ release.type_label }} · {{ release.genre }}{% if release.release_date %} · {{ release.release_date|ru_date }}{% endif %}</div>
+    <h1>{{ release.title }}</h1>
+    <div class="release-artist">
+      <a href="{{ url_for('artists.detail', slug=release.artist.slug) }}">{{ release.artist.name }}</a>
+      {% if release.feat %}<span class="muted">feat. {{ release.feat }}</span>{% endif %}
+    </div>
+    <div class="big-scores">
+      <div class="big-score">
+        {{ score_badge(release.user_score, 'score-xl') }}
+        <div><b>Слушатели</b><span class="muted">{{ release.user_count }} {{ plural(release.user_count, 'оценка', 'оценки', 'оценок') }}</span></div>
+      </div>
+      <div class="big-score">
+        {{ score_badge(release.critic_score, 'score-xl score-critic') }}
+        <div><b>Критики</b><span class="muted">{{ release.critic_count }} {{ plural(release.critic_count, 'оценка', 'оценки', 'оценок') }}</span></div>
+      </div>
+    </div>
+    {% if current_user.is_authenticated and current_user.is_admin %}
+      <a class="btn btn-sm btn-ghost" href="{{ url_for('admin.release_form', release_id=release.id) }}">Редактировать</a>
+    {% endif %}
+  </div>
+</section>
+
+<div class="release-layout">
+  <div class="release-main">
+    {% if user_criteria or critic_criteria %}
+    <section class="panel">
+      <h2>Разбор по критериям</h2>
+      <table class="crit-table">
+        <thead><tr><th></th><th>Слушатели</th><th>Критики</th></tr></thead>
+        <tbody>
+        {% for key, label, _ in ALL_CRITERIA %}
+          <tr>
+            <td>{{ label }}</td>
+            {% for data in (user_criteria, critic_criteria) %}
+              <td>
+                {% if data %}
+                  <div class="bar"><span style="width: {{ data[key] * 10 }}%"></span><b>{{ data[key] }}</b></div>
+                {% else %}<span class="muted">—</span>{% endif %}
+              </td>
+            {% endfor %}
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </section>
+    {% endif %}
+
+    <section class="panel" id="rate">
+      <h2>{{ 'Ваша оценка' if my_review else 'Оценить релиз' }}</h2>
+      {% if not current_user.is_authenticated %}
+        <p><a href="{{ url_for('auth.login', next=request.path) }}">Войдите</a> или <a href="{{ url_for('auth.register', next=request.path) }}">зарегистрируйтесь</a>, чтобы поставить оценку.</p>
+      {% elif release.status != 'published' %}
+        <p class="muted">Оценки откроются после публикации релиза.</p>
+      {% else %}
+        <form class="calc" method="post" action="{{ url_for('releases.rate', slug=release.slug) }}" data-calc>
+          {{ form.hidden_tag() }}
+          {% for key, label, hint in ALL_CRITERIA %}
+            {% set val = form[key].data or 5 %}
+            <label class="slider {{ 'slider-vibe' if key == 'vibe' }}">
+              <span>{{ label }}<small class="muted">{{ hint }}</small></span>
+              <input type="range" name="{{ key }}" min="1" max="10" value="{{ val }}" data-crit="{{ key }}">
+              <output>{{ val }}</output>
+            </label>
+          {% endfor %}
+          <div class="field">
+            {{ form.text.label }}
+            {{ form.text(rows=5, placeholder="Что зацепило, что нет? Рецензию увидят другие пользователи.") }}
+          </div>
+          <div class="calc-result">
+            Итог: <span class="score score-xl" data-score-out>—</span>
+            <button class="btn" type="submit">{{ 'Обновить оценку' if my_review else 'Поставить оценку' }}</button>
+          </div>
+        </form>
+        {% if my_review %}
+          <form action="{{ url_for('releases.delete_my_review', slug=release.slug) }}" method="post" data-confirm="Удалить вашу оценку?">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="link-btn danger" type="submit">Удалить мою оценку</button>
+          </form>
+        {% endif %}
+      {% endif %}
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <h2>Оценки и рецензии <span class="muted">{{ reviews|length }}</span></h2>
+        <div class="chips">
+          <a class="chip {{ 'active' if order == 'top' }}" href="{{ url_for('releases.detail', slug=release.slug, order='top') }}#reviews">Популярные</a>
+          <a class="chip {{ 'active' if order == 'new' }}" href="{{ url_for('releases.detail', slug=release.slug, order='new') }}#reviews">Новые</a>
+        </div>
+      </div>
+      <div class="reviews" id="reviews">
+        {% for rv in reviews %}{{ review_card(rv, liked_ids) }}{% else %}<div class="empty">Оценок пока нет — будьте первым.</div>{% endfor %}
+      </div>
+    </section>
+  </div>
+
+  <aside class="release-side">
+    {% if release.description %}
+      <section class="panel"><h3>О релизе</h3><p class="pre">{{ release.description }}</p></section>
+    {% endif %}
+    {% if release.tracks %}
+      <section class="panel">
+        <h3>Треклист</h3>
+        <ol class="tracklist">{% for t in release.tracks %}<li>{{ t }}</li>{% endfor %}</ol>
+      </section>
+    {% endif %}
+    {% if release.submitted_by %}
+      <p class="muted small">Добавил: <a href="{{ url_for('users.profile', username=release.submitted_by.username) }}">{{ release.submitted_by.username }}</a></p>
+    {% endif %}
+  </aside>
+</div>
+
+{% if more_from_artist %}
+<section class="section">
+  <div class="section-head"><h2>Ещё от {{ release.artist.name }}</h2></div>
+  <div class="grid">{% for r in more_from_artist %}{{ release_card(r) }}{% endfor %}</div>
+</section>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% from "_macros.html" import field with context %}
+{% block title %}Регистрация — {{ site_name }}{% endblock %}
+{% block content %}
+<div class="auth-box">
+  <h1>Регистрация</h1>
+  <form method="post" class="form">
+    {{ form.hidden_tag() }}
+    {{ field(form.username, 'Латиница, цифры, «_», «.», «-»', autocomplete='username', autofocus=True) }}
+    {{ field(form.email, autocomplete='email', type='email') }}
+    {{ field(form.password, 'Минимум 8 символов', autocomplete='new-password') }}
+    {{ field(form.password2, autocomplete='new-password') }}
+    <button class="btn btn-block" type="submit">Создать аккаунт</button>
+  </form>
+  <p class="muted">Уже есть аккаунт? <a href="{{ url_for('auth.login', next=request.args.get('next')) }}">Войдите</a></p>
+</div>
+{% endblock %}

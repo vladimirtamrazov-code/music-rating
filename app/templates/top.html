@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% from "_macros.html" import release_row with context %}
+{% block title %}Топ релизов — {{ site_name }}{% endblock %}
+{% block content %}
+<h1>Топ релизов</h1>
+<div class="filters">
+  <div class="chips">
+    {% for key, p in periods.items() %}
+      <a class="chip {{ 'active' if key == period }}" href="{{ url_for('main.top', period=key, type=rtype, by=by) }}">{{ p[0] }}</a>
+    {% endfor %}
+  </div>
+  <div class="chips">
+    <a class="chip {{ 'active' if not rtype }}" href="{{ url_for('main.top', period=period, by=by) }}">Все типы</a>
+    {% for key, label in RELEASE_TYPES.items() %}
+      <a class="chip {{ 'active' if key == rtype }}" href="{{ url_for('main.top', period=period, type=key, by=by) }}">{{ label }}</a>
+    {% endfor %}
+  </div>
+  <div class="chips">
+    <a class="chip {{ 'active' if by == 'users' }}" href="{{ url_for('main.top', period=period, type=rtype) }}">Слушатели</a>
+    <a class="chip {{ 'active' if by == 'critics' }}" href="{{ url_for('main.top', period=period, type=rtype, by='critics') }}">Критики</a>
+  </div>
+</div>
+<div class="rows">
+  {% for r in releases %}{{ release_row(r, loop.index) }}{% else %}
+    <div class="empty">За этот период оценённых релизов нет. Попробуйте <a href="{{ url_for('main.top', period='all') }}">топ за всё время</a>.</div>
+  {% endfor %}
+</div>
+{% endblock %}

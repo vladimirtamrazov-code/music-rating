@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Админка — {{ site_name }}{% endblock %}
+{% block content %}
+<div class="admin">
+  <nav class="admin-nav">
+    <a href="{{ url_for('admin.dashboard') }}" class="{{ 'active' if request.endpoint == 'admin.dashboard' }}">Обзор</a>
+    <a href="{{ url_for('admin.releases') }}" class="{{ 'active' if 'release' in request.endpoint }}">Релизы</a>
+    <a href="{{ url_for('admin.artists') }}" class="{{ 'active' if 'artist' in request.endpoint }}">Исполнители</a>
+    <a href="{{ url_for('admin.users') }}" class="{{ 'active' if 'user' in request.endpoint }}">Пользователи</a>
+    <a href="{{ url_for('admin.reviews') }}" class="{{ 'active' if 'review' in request.endpoint }}">Оценки</a>
+  </nav>
+  <div class="admin-body">{% block admin %}{% endblock %}</div>
+</div>
+{% endblock %}

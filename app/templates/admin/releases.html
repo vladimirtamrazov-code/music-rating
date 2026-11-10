@@ -1,0 +1,40 @@
+{% extends "admin/_layout.html" %}
+{% from "_macros.html" import score_badge, pagination with context %}
+{% block admin %}
+<div class="section-head">
+  <h1>Релизы</h1>
+  <a class="btn btn-sm" href="{{ url_for('admin.release_form') }}">+ Новый релиз</a>
+</div>
+<form class="filter-bar" method="get">
+  <input type="search" name="q" value="{{ q }}" placeholder="Название или исполнитель">
+  <select name="status">
+    <option value="">Все статусы</option>
+    <option value="published" {{ 'selected' if status == 'published' }}>Опубликован</option>
+    <option value="pending" {{ 'selected' if status == 'pending' }}>На модерации</option>
+    <option value="rejected" {{ 'selected' if status == 'rejected' }}>Отклонён</option>
+  </select>
+  <button class="btn btn-sm" type="submit">Фильтр</button>
+</form>
+<table class="table">
+  <thead><tr><th>Релиз</th><th>Тип</th><th>Статус</th><th>Слуш.</th><th>Крит.</th><th></th></tr></thead>
+  <tbody>
+  {% for r in page.items %}
+    <tr>
+      <td><a href="{{ url_for('releases.detail', slug=r.slug) }}">{{ r.artist.name }} — {{ r.title }}</a></td>
+      <td>{{ r.type_label }}</td>
+      <td><span class="tag tag-{{ r.status }}">{{ r.status_label }}</span></td>
+      <td>{{ score_badge(r.user_score) }}</td>
+      <td>{{ score_badge(r.critic_score) }}</td>
+      <td class="actions">
+        <a class="btn btn-sm btn-ghost" href="{{ url_for('admin.release_form', release_id=r.id) }}">Править</a>
+        <form class="inline" method="post" action="{{ url_for('admin.release_delete', release_id=r.id) }}" data-confirm="Удалить релиз «{{ r.title }}» вместе со всеми оценками?">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-sm btn-danger" type="submit">Удалить</button>
+        </form>
+      </td>
+    </tr>
+  {% else %}<tr><td colspan="6" class="empty">Ничего нет.</td></tr>{% endfor %}
+  </tbody>
+</table>
+{{ pagination(page) }}
+{% endblock %}

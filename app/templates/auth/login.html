@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% from "_macros.html" import field with context %}
+{% block title %}Вход — {{ site_name }}{% endblock %}
+{% block content %}
+<div class="auth-box">
+  <h1>Вход</h1>
+  <form method="post" class="form">
+    {{ form.hidden_tag() }}
+    {{ field(form.login, autocomplete='username', autofocus=True) }}
+    {{ field(form.password, autocomplete='current-password') }}
+    <label class="check">{{ form.remember() }} {{ form.remember.label.text }}</label>
+    <button class="btn btn-block" type="submit">Войти</button>
+  </form>
+  <p class="muted">Нет аккаунта? <a href="{{ url_for('auth.register', next=request.args.get('next')) }}">Зарегистрируйтесь</a></p>
+</div>
+{% endblock %}

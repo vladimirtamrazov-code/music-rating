@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% from "_macros.html" import field with context %}
+{% block title %}Предложить релиз — {{ site_name }}{% endblock %}
+{% block content %}
+<div class="form-page">
+  <h1>Предложить релиз</h1>
+  <p class="muted">{% if current_user.is_admin %}Вы администратор — релиз опубликуется сразу.{% else %}Релиз появится в каталоге после проверки модератором.{% endif %}</p>
+  {% include "releases/_form_fields.html" %}
+</div>
+{% endblock %}

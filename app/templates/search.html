@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% from "_macros.html" import release_row, avatar with context %}
+{% block title %}Поиск{% if q %}: {{ q }}{% endif %} — {{ site_name }}{% endblock %}
+{% block content %}
+<h1>Поиск</h1>
+<form class="search-big" action="{{ url_for('main.search') }}" method="get">
+  <input type="search" name="q" value="{{ q }}" placeholder="Релиз, исполнитель или пользователь" autofocus>
+  <button class="btn" type="submit">Найти</button>
+</form>
+{% if q and q|length < 2 %}
+  <div class="empty">Введите хотя бы 2 символа.</div>
+{% elif q %}
+  {% if not (releases or artists or users) %}<div class="empty">По запросу «{{ q }}» ничего не найдено.</div>{% endif %}
+  {% if artists %}
+    <h2>Исполнители</h2>
+    <div class="chips">{% for a in artists %}<a class="chip" href="{{ url_for('artists.detail', slug=a.slug) }}">{{ a.name }}</a>{% endfor %}</div>
+  {% endif %}
+  {% if releases %}
+    <h2>Релизы</h2>
+    <div class="rows">{% for r in releases %}{{ release_row(r) }}{% endfor %}</div>
+  {% endif %}
+  {% if users %}
+    <h2>Пользователи</h2>
+    <div class="chips">{% for u in users %}<a class="chip chip-user" href="{{ url_for('users.profile', username=u.username) }}">{{ avatar(u, 'avatar-xs') }} {{ u.username }}</a>{% endfor %}</div>
+  {% endif %}
+{% endif %}
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends "admin/_layout.html" %}
+{% from "_macros.html" import score_badge, pagination with context %}
+{% block admin %}
+<h1>Оценки</h1>
+<table class="table">
+  <thead><tr><th>Пользователь</th><th>Релиз</th><th>Балл</th><th>Текст</th><th>Дата</th><th></th></tr></thead>
+  <tbody>
+  {% for rv in page.items %}
+    <tr>
+      <td><a href="{{ url_for('users.profile', username=rv.user.username) }}">{{ rv.user.username }}</a></td>
+      <td><a href="{{ url_for('releases.detail', slug=rv.release.slug) }}#review-{{ rv.id }}">{{ rv.release.title }}</a></td>
+      <td>{{ score_badge(rv.score) }}</td>
+      <td class="muted clip">{{ rv.text|truncate(120) }}</td>
+      <td class="muted">{{ rv.created_at.date()|ru_date }}</td>
+      <td>
+        <form class="inline" method="post" action="{{ url_for('admin.review_delete', review_id=rv.id) }}" data-confirm="Удалить оценку?">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-sm btn-danger" type="submit">Удалить</button>
+        </form>
+      </td>
+    </tr>
+  {% else %}<tr><td colspan="6" class="empty">Оценок нет.</td></tr>{% endfor %}
+  </tbody>
+</table>
+{{ pagination(page) }}
+{% endblock %}

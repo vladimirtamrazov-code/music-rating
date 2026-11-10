@@ -1,0 +1,33 @@
+{% extends "admin/_layout.html" %}
+{% from "_macros.html" import pagination with context %}
+{% block admin %}
+<div class="section-head">
+  <h1>Исполнители</h1>
+  <a class="btn btn-sm" href="{{ url_for('admin.artist_form') }}">+ Новый исполнитель</a>
+</div>
+<form class="filter-bar" method="get">
+  <input type="search" name="q" value="{{ q }}" placeholder="Имя">
+  <button class="btn btn-sm" type="submit">Найти</button>
+</form>
+<table class="table">
+  <thead><tr><th>Имя</th><th>Релизов</th><th></th></tr></thead>
+  <tbody>
+  {% for a, n in page.items %}
+    <tr>
+      <td><a href="{{ url_for('artists.detail', slug=a.slug) }}">{{ a.name }}</a></td>
+      <td>{{ n }}</td>
+      <td class="actions">
+        <a class="btn btn-sm btn-ghost" href="{{ url_for('admin.artist_form', artist_id=a.id) }}">Править</a>
+        {% if n == 0 %}
+        <form class="inline" method="post" action="{{ url_for('admin.artist_delete', artist_id=a.id) }}" data-confirm="Удалить исполнителя «{{ a.name }}»?">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-sm btn-danger" type="submit">Удалить</button>
+        </form>
+        {% endif %}
+      </td>
+    </tr>
+  {% else %}<tr><td colspan="3" class="empty">Ничего нет.</td></tr>{% endfor %}
+  </tbody>
+</table>
+{{ pagination(page) }}
+{% endblock %}

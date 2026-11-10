@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% from "_macros.html" import release_card, release_row, review_card with context %}
+{% block content %}
+<section class="hero">
+  <div class="hero-text">
+    <h1>Оценивай музыку <span class="accent">по делу</span></h1>
+    <p class="lead">Пять критериев вместо «нравится / не нравится». Тексты, ритмика, стиль, харизма и атмосфера складываются в оценку до&nbsp;90 баллов.</p>
+    <div class="hero-actions">
+      <a class="btn" href="{{ url_for('releases.catalog') }}">Смотреть релизы</a>
+      <a class="btn btn-ghost" href="{{ url_for('main.about') }}">Как считается оценка</a>
+    </div>
+  </div>
+  <dl class="hero-stats">
+    <div><dt>{{ stats.releases }}</dt><dd>{{ plural(stats.releases, 'релиз', 'релиза', 'релизов') }}</dd></div>
+    <div><dt>{{ stats.reviews }}</dt><dd>{{ plural(stats.reviews, 'оценка', 'оценки', 'оценок') }}</dd></div>
+    <div><dt>{{ stats.users }}</dt><dd>{{ plural(stats.users, 'участник', 'участника', 'участников') }}</dd></div>
+  </dl>
+</section>
+
+<section class="section">
+  <div class="section-head">
+    <h2>Новые релизы</h2>
+    <a href="{{ url_for('releases.catalog') }}">Все релизы →</a>
+  </div>
+  {% if new_releases %}
+    <div class="grid">{% for r in new_releases %}{{ release_card(r) }}{% endfor %}</div>
+  {% else %}
+    <div class="empty">Релизов пока нет. {% if current_user.is_authenticated %}<a href="{{ url_for('releases.suggest') }}">Добавьте первый!</a>{% endif %}</div>
+  {% endif %}
+</section>
+
+<div class="two-col">
+  <section class="section">
+    <div class="section-head">
+      <h2>Лучшее за месяц</h2>
+      <a href="{{ url_for('main.top') }}">Весь топ →</a>
+    </div>
+    <div class="rows">
+      {% for r in top_month %}{{ release_row(r, loop.index) }}{% else %}<div class="empty">Пока нет оценённых релизов.</div>{% endfor %}
+    </div>
+  </section>
+  <section class="section">
+    <div class="section-head"><h2>Свежие рецензии</h2></div>
+    <div class="reviews">
+      {% for rv in latest_reviews %}{{ review_card(rv, show_release=True) }}{% else %}<div class="empty">Рецензий пока нет.</div>{% endfor %}
+    </div>
+  </section>
+</div>
+{% endblock %}

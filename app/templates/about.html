@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Как считается оценка — {{ site_name }}{% endblock %}
+{% block content %}
+<article class="prose">
+  <h1>Как считается оценка</h1>
+  <p class="lead">Каждый релиз оценивается по пяти критериям от 1 до 10. Итоговый балл — от 6 до {{ MAX_SCORE }}.</p>
+
+  <div class="criteria-list">
+    {% for key, label, hint in CRITERIA %}
+      <div class="criterion"><b>{{ loop.index }}. {{ label }}</b><span class="muted">{{ hint }}</span></div>
+    {% endfor %}
+    <div class="criterion criterion-vibe"><b>5. {{ VIBE[1] }}</b><span class="muted">{{ VIBE[2] }}</span></div>
+  </div>
+
+  <h2>Формула</h2>
+  <pre class="formula">база      = (Рифмы + Структура + Стиль + Харизма) × 1.4      // максимум 56
+множитель = 1 + (Атмосфера − 1) / 9 × 0.607                 // от ×1.00 до ×1.61
+оценка    = округлить(база × множитель)                     // максимум {{ MAX_SCORE }}</pre>
+  <p>Атмосфера — не пятое слагаемое, а усилитель: технически безупречный, но «пустой» релиз не наберёт высокий балл, а сильная атмосфера заметно поднимет хорошую работу.</p>
+
+  <h2>Попробуйте сами</h2>
+  <div class="calc" data-calc>
+    {% for key, label, _ in CRITERIA + [VIBE] %}
+      <label class="slider">
+        <span>{{ label }}</span>
+        <input type="range" min="1" max="10" value="7" data-crit="{{ key }}">
+        <output>7</output>
+      </label>
+    {% endfor %}
+    <div class="calc-result">Итог: <span class="score score-xl" data-score-out>—</span></div>
+  </div>
+
+  <h2>Слушатели и критики</h2>
+  <p>Оценки показываются раздельно: средняя оценка слушателей и средняя оценка редакции (пользователи с ролью «Критик»). Так видно, где мнения публики и экспертов расходятся.</p>
+
+  <h2>Цвет оценки</h2>
+  <div class="chips">
+    <span class="score tier-gold">80+</span> шедевр
+    <span class="score tier-high">65+</span> сильно
+    <span class="score tier-mid">45+</span> средне
+    <span class="score tier-low">&lt;45</span> слабо
+  </div>
+</article>
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% from "_macros.html" import release_card, pagination with context %}
+{% block title %}Релизы — {{ site_name }}{% endblock %}
+{% block content %}
+<div class="section-head">
+  <h1>Релизы</h1>
+  {% if current_user.is_authenticated %}<a class="btn btn-sm" href="{{ url_for('releases.suggest') }}">+ Предложить релиз</a>{% endif %}
+</div>
+<form class="filter-bar" method="get">
+  <select name="type" aria-label="Тип">
+    <option value="">Все типы</option>
+    {% for k, v in RELEASE_TYPES.items() %}<option value="{{ k }}" {{ 'selected' if k == rtype }}>{{ v }}</option>{% endfor %}
+  </select>
+  <select name="genre" aria-label="Жанр">
+    <option value="">Все жанры</option>
+    {% for g in GENRES %}<option {{ 'selected' if g == genre }}>{{ g }}</option>{% endfor %}
+  </select>
+  <select name="year" aria-label="Год">
+    <option value="">Любой год</option>
+    {% for y in years %}<option {{ 'selected' if y == year }}>{{ y }}</option>{% endfor %}
+  </select>
+  <select name="sort" aria-label="Сортировка">
+    {% for k, s in sorts.items() %}<option value="{{ k }}" {{ 'selected' if k == sort }}>{{ s[0] }}</option>{% endfor %}
+  </select>
+  <button class="btn btn-sm" type="submit">Применить</button>
+  {% if rtype or genre or year or sort != 'new' %}<a href="{{ url_for('releases.catalog') }}">Сбросить</a>{% endif %}
+</form>
+<p class="muted">Найдено: {{ page.total }}</p>
+{% if page.items %}
+  <div class="grid">{% for r in page.items %}{{ release_card(r) }}{% endfor %}</div>
+{% else %}
+  <div class="empty">Ничего не найдено. Попробуйте изменить фильтры.</div>
+{% endif %}
+{{ pagination(page) }}
+{% endblock %}

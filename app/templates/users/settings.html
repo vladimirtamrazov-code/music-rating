@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% from "_macros.html" import field with context %}
+{% block title %}Настройки — {{ site_name }}{% endblock %}
+{% block content %}
+<div class="form-page">
+  <h1>Настройки</h1>
+  <section class="panel">
+    <h2>Профиль</h2>
+    <form method="post" class="form">
+      {{ profile_form.hidden_tag() }}
+      {{ field(profile_form.avatar_url, placeholder='https://…') }}
+      {{ field(profile_form.bio, rows=4) }}
+      <button class="btn" type="submit" name="p-submit" value="1">Сохранить</button>
+    </form>
+  </section>
+  <section class="panel">
+    <h2>Смена пароля</h2>
+    <form method="post" class="form">
+      {{ password_form.hidden_tag() }}
+      {{ field(password_form.current, autocomplete='current-password') }}
+      {{ field(password_form.new, autocomplete='new-password') }}
+      {{ field(password_form.new2, autocomplete='new-password') }}
+      <button class="btn" type="submit" name="pw-submit" value="1">Сменить пароль</button>
+    </form>
+  </section>
+</div>
+{% endblock %}

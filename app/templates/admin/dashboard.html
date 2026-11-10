@@ -1,0 +1,30 @@
+{% extends "admin/_layout.html" %}
+{% block admin %}
+<h1>Обзор</h1>
+<dl class="stat-tiles">
+  {% for label, n in stats.items() %}<div><dt>{{ n }}</dt><dd>{{ label }}</dd></div>{% endfor %}
+</dl>
+<h2>Ожидают модерации</h2>
+{% if pending %}
+<table class="table">
+  <thead><tr><th>Релиз</th><th>Прислал</th><th>Дата</th><th></th></tr></thead>
+  <tbody>
+  {% for r in pending %}
+    <tr>
+      <td><a href="{{ url_for('releases.detail', slug=r.slug) }}">{{ r.artist.name }} — {{ r.title }}</a> <span class="muted">{{ r.type_label }}</span></td>
+      <td>{% if r.submitted_by %}<a href="{{ url_for('users.profile', username=r.submitted_by.username) }}">{{ r.submitted_by.username }}</a>{% endif %}</td>
+      <td class="muted">{{ r.created_at.date()|ru_date }}</td>
+      <td class="actions">
+        <a class="btn btn-sm btn-ghost" href="{{ url_for('admin.release_form', release_id=r.id) }}">Править</a>
+        <form class="inline" method="post" action="{{ url_for('admin.release_status', release_id=r.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-sm" name="status" value="published">Опубликовать</button>
+          <button class="btn btn-sm btn-danger" name="status" value="rejected">Отклонить</button>
+        </form>
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}<div class="empty">Очередь пуста.</div>{% endif %}
+{% endblock %}

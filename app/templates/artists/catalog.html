@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% from "_macros.html" import score_badge, pagination with context %}
+{% block title %}Исполнители — {{ site_name }}{% endblock %}
+{% block content %}
+<h1>Исполнители</h1>
+<form class="filter-bar" method="get">
+  <input type="search" name="q" value="{{ q }}" placeholder="Имя исполнителя">
+  <button class="btn btn-sm" type="submit">Найти</button>
+</form>
+{% if page.items %}
+<div class="artist-grid">
+  {% for artist, n, avg in page.items %}
+    <a class="artist-tile" href="{{ url_for('artists.detail', slug=artist.slug) }}">
+      {% if artist.photo_url %}<img class="avatar avatar-lg" src="{{ artist.photo_url }}" alt="" loading="lazy" referrerpolicy="no-referrer">
+      {% else %}<span class="avatar avatar-lg avatar-ph" style="--h: {{ (artist.id * 53) % 360 }}">{{ artist.name[:1] }}</span>{% endif %}
+      <div class="strong">{{ artist.name }}</div>
+      <div class="muted small">{{ n }} {{ plural(n, 'релиз', 'релиза', 'релизов') }}</div>
+      {{ score_badge(avg|round(1) if avg is not none else none) }}
+    </a>
+  {% endfor %}
+</div>
+{% else %}<div class="empty">Исполнители не найдены.</div>{% endif %}
+{{ pagination(page) }}
+{% endblock %}

@@ -1,0 +1,17 @@
+{% from "_macros.html" import field with context %}
+<form method="post" class="form">
+  {{ form.hidden_tag() }}
+  <div class="form-grid">
+    {{ field(form.artist, 'Если исполнителя нет в базе, он будет создан', autocomplete='off') }}
+    {{ field(form.feat, placeholder='Через запятую') }}
+    {{ field(form.title) }}
+    {{ field(form.release_date) }}
+    {{ field(form.type) }}
+    {{ field(form.genre) }}
+  </div>
+  {{ field(form.cover_url, 'Прямая ссылка на изображение (jpg/png/webp)', placeholder='https://…') }}
+  {{ field(form.description, rows=4) }}
+  {{ field(form.tracklist, rows=8, placeholder='Интро\nПервый трек\n…') }}
+  {% if form.status %}{{ field(form.status) }}{% endif %}
+  <button class="btn" type="submit">Сохранить</button>
+</form>

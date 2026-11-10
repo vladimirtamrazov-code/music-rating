@@ -1,0 +1,115 @@
+{% macro score_badge(value, size='', label='') -%}
+  <span class="score {{ value|tier }} {{ size }}" {% if label %}title="{{ label }}"{% endif %}>{{ value|score }}</span>
+{%- endmacro %}
+
+{% macro cover(release, cls='') -%}
+  {% if release.cover_url %}
+    <img class="cover {{ cls }}" src="{{ release.cover_url }}" alt="Обложка: {{ release.artist.name }} — {{ release.title }}" loading="lazy" referrerpolicy="no-referrer">
+  {% else %}
+    <div class="cover cover-ph {{ cls }}" style="--h: {{ (release.id * 47) % 360 }}" role="img" aria-label="Обложка: {{ release.title }}">
+      <span>{{ release.title[:1] }}</span>
+    </div>
+  {% endif %}
+{%- endmacro %}
+
+{% macro avatar(user, cls='') -%}
+  {% if user.avatar_url %}
+    <img class="avatar {{ cls }}" src="{{ user.avatar_url }}" alt="" loading="lazy" referrerpolicy="no-referrer">
+  {% else %}
+    <span class="avatar avatar-ph {{ cls }}" style="--h: {{ (user.id * 67) % 360 }}">{{ user.username[:1]|upper }}</span>
+  {% endif %}
+{%- endmacro %}
+
+{% macro release_card(r, rank=None) -%}
+  <a class="card" href="{{ url_for('releases.detail', slug=r.slug) }}">
+    <div class="card-cover">
+      {{ cover(r) }}
+      {% if rank %}<span class="rank">#{{ rank }}</span>{% endif %}
+      <div class="card-scores">
+        {{ score_badge(r.user_score, label='Слушатели') }}
+        {% if r.critic_score is not none %}{{ score_badge(r.critic_score, 'score-critic', 'Критики') }}{% endif %}
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="card-title">{{ r.title }}</div>
+      <div class="card-artist">{{ r.artist.name }}</div>
+      <div class="card-meta">{{ r.type_label }}{% if r.release_date %} · {{ r.release_date.year }}{% endif %}</div>
+    </div>
+  </a>
+{%- endmacro %}
+
+{% macro release_row(r, rank=None) -%}
+  <a class="row" href="{{ url_for('releases.detail', slug=r.slug) }}">
+    {% if rank %}<span class="row-rank">{{ rank }}</span>{% endif %}
+    {{ cover(r, 'cover-sm') }}
+    <div class="row-main">
+      <div class="row-title">{{ r.title }}</div>
+      <div class="muted">{{ r.artist.name }} · {{ r.type_label }} · {{ r.genre }}{% if r.release_date %} · {{ r.release_date|ru_date }}{% endif %}</div>
+    </div>
+    <div class="row-scores">
+      <div class="row-score">{{ score_badge(r.user_score) }}<small>{{ r.user_count }} {{ plural(r.user_count, 'оценка', 'оценки', 'оценок') }}</small></div>
+      <div class="row-score">{{ score_badge(r.critic_score, 'score-critic') }}<small>критики</small></div>
+    </div>
+  </a>
+{%- endmacro %}
+
+{% macro field(f, hint=None) -%}
+  <div class="field {{ 'has-error' if f.errors }}">
+    {{ f.label }}
+    {{ f(**kwargs) }}
+    {% if hint %}<small class="muted">{{ hint }}</small>{% endif %}
+    {% for e in f.errors %}<div class="error">{{ e }}</div>{% endfor %}
+  </div>
+{%- endmacro %}
+
+{% macro pagination(page) -%}
+  {% if page.pages > 1 %}
+  <nav class="pagination">
+    {% if page.has_prev %}<a href="{{ page_url(page.prev_num) }}">←</a>{% endif %}
+    {% for p in page.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+      {% if p %}
+        {% if p == page.page %}<span class="current">{{ p }}</span>{% else %}<a href="{{ page_url(p) }}">{{ p }}</a>{% endif %}
+      {% else %}<span class="gap">…</span>{% endif %}
+    {% endfor %}
+    {% if page.has_next %}<a href="{{ page_url(page.next_num) }}">→</a>{% endif %}
+  </nav>
+  {% endif %}
+{%- endmacro %}
+
+{% macro review_card(rv, liked_ids=(), show_release=False) -%}
+  <article class="review" id="review-{{ rv.id }}">
+    <header class="review-head">
+      {% if show_release %}
+        <a href="{{ url_for('releases.detail', slug=rv.release.slug) }}">{{ cover(rv.release, 'cover-xs') }}</a>
+        <div class="review-who">
+          <a class="strong" href="{{ url_for('releases.detail', slug=rv.release.slug) }}">{{ rv.release.artist.name }} — {{ rv.release.title }}</a>
+          <span class="muted">от <a href="{{ url_for('users.profile', username=rv.user.username) }}">{{ rv.user.username }}</a>{% if rv.user.is_editorial %} <span class="tag tag-critic">критик</span>{% endif %}</span>
+        </div>
+      {% else %}
+        {{ avatar(rv.user) }}
+        <div class="review-who">
+          <a class="strong" href="{{ url_for('users.profile', username=rv.user.username) }}">{{ rv.user.username }}</a>
+          {% if rv.user.is_editorial %}<span class="tag tag-critic">критик</span>{% endif %}
+          <span class="muted">{{ rv.created_at.date()|ru_date }}</span>
+        </div>
+      {% endif %}
+      {{ score_badge(rv.score, 'score-lg') }}
+    </header>
+    <div class="review-points">
+      {% for key, label, _ in ALL_CRITERIA %}<span title="{{ label }}">{{ label.split(' ')[0] }} <b>{{ rv[key] }}</b></span>{% endfor %}
+    </div>
+    {% if rv.text %}<div class="review-text">{{ rv.text }}</div>{% endif %}
+    <footer class="review-foot">
+      {% set mine = current_user.is_authenticated and current_user.id == rv.user_id %}
+      <button class="like {{ 'liked' if rv.id in liked_ids }}" data-like="{{ url_for('api.toggle_like', review_id=rv.id) }}" {% if mine %}disabled title="Это ваша рецензия"{% endif %}>
+        ♥ <span>{{ rv.likes_count }}</span>
+      </button>
+      {% if current_user.is_authenticated and current_user.is_admin and not mine %}
+        <form action="{{ url_for('admin.review_delete', review_id=rv.id) }}" method="post" data-confirm="Удалить эту оценку?">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="link-btn danger" type="submit">Удалить</button>
+        </form>
+      {% endif %}
+    </footer>
+  </article>
+{%- endmacro %}

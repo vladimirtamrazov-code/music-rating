@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% from "_macros.html" import release_card, score_badge with context %}
+{% block title %}{{ artist.name }} — {{ site_name }}{% endblock %}
+{% block content %}
+<section class="artist-hero">
+  {% if artist.photo_url %}<img class="avatar avatar-xl" src="{{ artist.photo_url }}" alt="{{ artist.name }}" referrerpolicy="no-referrer">
+  {% else %}<span class="avatar avatar-xl avatar-ph" style="--h: {{ (artist.id * 53) % 360 }}">{{ artist.name[:1] }}</span>{% endif %}
+  <div>
+    <h1>{{ artist.name }}</h1>
+    {% if artist.bio %}<p class="pre">{{ artist.bio }}</p>{% endif %}
+    <div class="artist-stats">
+      <div>{{ score_badge(avg, 'score-lg') }} <span class="muted">средняя по релизам</span></div>
+      <div><b>{{ releases|length }}</b> <span class="muted">{{ plural(releases|length, 'релиз', 'релиза', 'релизов') }}</span></div>
+      {% if best %}<div><span class="muted">Лучший:</span> <a href="{{ url_for('releases.detail', slug=best.slug) }}">{{ best.title }}</a></div>{% endif %}
+    </div>
+    {% if current_user.is_authenticated and current_user.is_admin %}
+      <a class="btn btn-sm btn-ghost" href="{{ url_for('admin.artist_form', artist_id=artist.id) }}">Редактировать</a>
+    {% endif %}
+  </div>
+</section>
+
+{% for type_key, type_label in RELEASE_TYPES.items() %}
+  {% set group = releases|selectattr('type', 'equalto', type_key)|list %}
+  {% if group %}
+    <section class="section">
+      <h2>{{ type_label }}{{ 'ы' if type_key in ('album', 'single', 'mixtape') and group|length > 1 }} <span class="muted">{{ group|length }}</span></h2>
+      <div class="grid">{% for r in group %}{{ release_card(r) }}{% endfor %}</div>
+    </section>
+  {% endif %}
+{% else %}{% endfor %}
+{% if not releases %}<div class="empty">У исполнителя пока нет опубликованных релизов.</div>{% endif %}
+{% endblock %}

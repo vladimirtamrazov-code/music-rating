@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% from "_macros.html" import avatar, review_card, score_badge, pagination with context %}
+{% block title %}{{ user.username }} — {{ site_name }}{% endblock %}
+{% block content %}
+<section class="profile-hero">
+  {{ avatar(user, 'avatar-xl') }}
+  <div>
+    <h1>{{ user.username }} {% if user.role != 'user' %}<span class="tag tag-critic">{{ user.role_label }}</span>{% endif %}</h1>
+    {% if user.bio %}<p class="pre">{{ user.bio }}</p>{% endif %}
+    <p class="muted small">На сайте с {{ user.created_at.date()|ru_date }}</p>
+    {% if current_user.is_authenticated and current_user.id == user.id %}
+      <a class="btn btn-sm btn-ghost" href="{{ url_for('users.settings') }}">Редактировать профиль</a>
+    {% endif %}
+  </div>
+  <dl class="profile-stats">
+    <div><dt>{{ total }}</dt><dd>{{ plural(total, 'оценка', 'оценки', 'оценок') }}</dd></div>
+    <div><dt>{{ avg|score }}</dt><dd>средний балл</dd></div>
+    <div><dt>{{ likes }}</dt><dd>{{ plural(likes, 'лайк', 'лайка', 'лайков') }}</dd></div>
+  </dl>
+</section>
+
+{% if total %}
+<section class="panel">
+  <h2>Распределение оценок</h2>
+  <div class="histogram">
+    {% for label, n in histogram %}
+      <div class="hist-col">
+        <div class="hist-bar" style="height: {{ (n / max_bucket * 100)|round }}%"><span>{{ n }}</span></div>
+        <div class="muted small">{{ label }}</div>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<section class="section">
+  <h2>Оценки</h2>
+  <div class="reviews">
+    {% for rv in page.items %}{{ review_card(rv, show_release=True) }}{% else %}<div class="empty">Пока нет оценок.</div>{% endfor %}
+  </div>
+  {{ pagination(page) }}
+</section>
+{% endblock %}

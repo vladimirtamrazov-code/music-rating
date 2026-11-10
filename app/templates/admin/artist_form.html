@@ -1,0 +1,12 @@
+{% extends "admin/_layout.html" %}
+{% from "_macros.html" import field with context %}
+{% block admin %}
+<h1>{{ 'Редактирование: ' ~ artist.name if artist else 'Новый исполнитель' }}</h1>
+<form method="post" class="form">
+  {{ form.hidden_tag() }}
+  {{ field(form.name) }}
+  {{ field(form.photo_url, placeholder='https://…') }}
+  {{ field(form.bio, rows=6) }}
+  <button class="btn" type="submit">Сохранить</button>
+</form>
+{% endblock %}
